@@ -1,0 +1,1 @@
+# Synthetic-Handwriting-Document-Images-Generator
