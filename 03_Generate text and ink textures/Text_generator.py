@@ -1,16 +1,21 @@
 from PIL import Image, ImageDraw, ImageFont,  ImageFilter
 import numpy as np
-import random
+import csv
+import os
+import re
 
+# Function not used yet
 def is_uppercase(letter):
     return letter.isupper()
 
+# Function not used yet
 def check_uppercase(text):
     for line in text:
         for letter in line:
             if is_uppercase(letter):
                 print(letter)
 
+# Function not used yet
 def smudgeness(letter_image):
     smudged_letter = letter_image.filter(ImageFilter.SMOOTH)
     return smudged_letter
@@ -34,14 +39,83 @@ def reproduce_ink (image):
     ink_texture_image = Image.fromarray(ink_texture, 'RGB')
     return ink_texture_image
 
+# Function not used yet
+def ground_truth (text):
+    filename = 'ground_truth.tsv'
+    if os.path.exists(filename):
+        # Truncate the file
+        os.truncate(filename, 0)
+    # Open the TSV file in append mode
+    with open(filename, 'a', newline='') as csvfile:
+        # Create a CSV writer object
+        writer = csv.writer(csvfile, delimiter='-')
+        # Split the input string into words
+        words = re.findall(r"[\w']+|[^\s\w]", text)
+        # Separate each word with '-' and write to the TSV file
+        separated_words = []
+        for word in words:
+            separated_words.append(word)
+        # Write the separated words to the TSV file
+        writer.writerow(separated_words)
+
+def draw_text_with_boxes(image, font, font_size, text_position, font_color, text, max_line_width):
+    # Convert text to RGBA image
+    text_image = Image.new('RGBA', image.size, (255, 255, 255, 0))  # Initialize with transparent background
+    draw_text = ImageDraw.Draw(text_image)
+
+    # Initialize variables
+    lines = []
+    current_line = ''
+    current_x, current_y = text_position
+
+    # Process text and create lines
+    for word in text.split(' '):
+        # Calculate the width of the word
+        word_bbox = font.getbbox(word)
+        word_width = word_bbox[2] - word_bbox[0]
+        
+        # Check if reaching max line width
+        if len(current_line) * font_size + word_width > max_line_width:
+            # Add current line to lines and start a new line
+            lines.append(current_line)
+            current_line = word
+        else:
+            current_line += word + ' '
+
+    # Add the last line if not empty
+    if current_line:
+        lines.append(current_line)
+    
+    # Draw text onto the text image within each line
+    for line in lines:
+        line_bbox = (current_x, current_y, current_x + len(line) * font_size, current_y + font_size)
+        draw_text.text((line_bbox[0], line_bbox[1]), line, fill=font_color, font=font, size=font_size)
+        current_y += font_size * 1.5 # not necessary for the final output
+    
+    return text_image
+
 def extract_text(filetext):
     with open(filetext, 'r') as f:
         # Read the entire contents of the file
         text = f.read()
-        check_uppercase(text)
-    return text
+        # check_uppercase(text)
+        # Split the text into lines at the end of each sentence (period)
 
-def reproduce_text(image_path, font_size, text_position, target_letter, filetext):
+        return text
+
+# Function not used yet
+def draw_bounding_boxes(draw, text_position, font, text):
+    lines = text.split('\n')
+    for i, line in enumerate(lines):
+        line_position = (text_position[0], text_position[1] + i * font_size)  # Adjust the y-coordinate for each line
+        text_bbox = draw.textbbox(line_position, line, font=font)
+        bounding_box = [(text_bbox[0], text_bbox[1]),
+                        (text_bbox[2], text_bbox[1]),
+                        (text_bbox[2], text_bbox[3]),
+                        (text_bbox[0], text_bbox[3])]
+        draw.polygon(bounding_box, outline=(255, 0, 0))  # Draw a red bounding box
+
+def reproduce_text(image_path, font_size, text_position, target_letter, filetext, max_line_width):
 
     # Load the image
     image = Image.open(image_path)
@@ -49,26 +123,30 @@ def reproduce_text(image_path, font_size, text_position, target_letter, filetext
     font_path = "carolus.ttf"
     font = ImageFont.truetype(font_path, font_size)
     # Define ink texture parameters
-    font_color = (137, 107, 81, 130)
+    font_color = (137, 107, 81, 240)
     # Generate ink texture with varying shades of brown
     ink_texture_image = reproduce_ink(image)
-    # Convert text to RGBA image
-    text_image = Image.new('RGBA', image.size, (255, 255, 255, 0))  # Initialize with transparent background
-    draw_text = ImageDraw.Draw(text_image)
 
     # Extract the transcript text from a file .txt
     text = extract_text(filetext)
-    draw_text.text(text_position, text, font=font, fill=font_color)
+    # Ground truth creation
+    # ground_truth(text)
+    # Draw text on a separate image
+    text_image = draw_text_with_boxes(image, font, font_size, text_position, font_color, text, max_line_width)
+
     # Resize ink texture image if dimensions do not match
     if text_image.size != ink_texture_image.size:
-        ink_texture_image = ink_texture_image.resize(text_image.size)
-
+         ink_texture_image = ink_texture_image.resize(text_image.size)
+    
     # Blend the ink texture and text images using Image.composite
     blended_image = Image.composite(ink_texture_image, image, text_image)
+    # Draw bounding boxes on the blended image
+    # draw = ImageDraw.Draw(blended_image)
+    # draw_bounding_boxes(draw, text_position, font, text)
+    
+    # Combine the text image with the original image
     blended_image.show()
     blended_image.save("Blended_image.jpg")
-
-
 """ 
 def mask_region(image, font, target_letter):
     # Create a separate image with a lesser size than the original image
@@ -116,8 +194,9 @@ def mask_region(image, font, target_letter):
 # Example usage
 filetext = "transcript.txt"
 image_path = "image.jpg"
-font_size = 20
-target_letter = "o"  # Specify the target letter
-text_position = (130, 300)
+font_size = 13
+target_letter = "o"  # Specify the target letter (not used for now)
+text_position = (50, 200)
+max_line_width = 1200
 
-reproduce_text(image_path, font_size, text_position, target_letter, filetext)
+reproduce_text(image_path, font_size, text_position, target_letter, filetext, max_line_width)
