@@ -1,0 +1,28 @@
+A nice calligraphic typeface, originally dated to 1991 and circulating as "Carolingia" and with the filename dorcla.ttf and the notice "A William Boyd Release. Free of Charge."
+Now the fonts going with that name do not seem to be Boyd's original creations but adaptations of existing faces. Since Carolingia hat a few shortcomings (most obviously the too high x-height of the lowercase t) I started tweaking it for my own purposes and later published it on my web site fontgrube.de. Mistakes were corrected and more extended characters added.
+
+As it is now time to update the contact information I take the opportunity to do some more tweaks. Have fun with this free font but mind the fontgrube distribution rules.
+
+Use
+---
+You may use this font software free of charge for both personal and commercial use. 
+
+Conversion and modification
+---------------------------
+You may convert this font to other formats including web font formats or modify it for your own purposes. You may use web font formats of this font to display text on your web pages, but you may not explicitly offer converted or modified versions of this font software for download or re-use by others, unless you have received permission in writing to do so.
+
+Distribution
+------------
+You may distribute this font on digital media or as a download on your website as long as you comply with the following rules. Violation of one or more of these rules terminates your distribution license and you have to stop distribution immediately:
+
+1. You may offer the font only in form of a ZIP file containing only the font software and this readme file. 
+2. You are not allowed to distribute the font software without this text file.
+3. You may not redistribute modified or converted copies of the font software (see above).
+4. You may not add advertising messages in text or graphics form to the zip file.
+5. You are not allowed to create a self-extracting executable file containing the font software or require the user 6. to run or install a download manager or other software to get the download.
+7. You may not charge money for the download. 
+8. If you want to distribute this font on storage media (CD DVD) produced in numbers of more than 50 identical copies, you must send me a specimen copy.
+
+April 2013
+Andreas Höfeld
+fontgrube.de
