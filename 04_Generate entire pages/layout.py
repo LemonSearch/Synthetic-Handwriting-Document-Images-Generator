@@ -1,6 +1,7 @@
 from PIL import Image, ImageFilter, ImageDraw, ImageFont, ImageOps
 from statistics import mean
 import numpy as np
+import yaml
 
 COLS_W = 2635
 COLS_H = 2860
@@ -110,8 +111,13 @@ class Manuscript:
 
 
 if __name__ == "__main__":
+    data = {}
+    with open("./config.yaml", "r") as config:
+        data = yaml.full_load(config)
+    # print(data)
+
     man = Manuscript()
-    man.get_background("./background.jpg")
+    man.get_background("./Texterase/e1.jpg")
     # x0, y0, x1, y1 = man.get_columns_coord()
     # col1, col2 = man.get_col()
     lines = man.get_lines()
@@ -123,45 +129,55 @@ if __name__ == "__main__":
     # img.rectangle([x0, y0, x1, y1], fill="black")
     # img.rectangle([*col1], fill="grey")
     # img .rectangle([*col2], fill="grey")
-    for line in lines:
-        img.line([*line], fill="yellow", width=5)
+    # for line in lines:
+        # img.line([*line], fill="yellow", width=5)
+    lines = data["line_d_std"]/2 * np.random.randn(1, 25) + data["avg_line_d"]
+    # print(lines)
+    for col in range(1, 3):
+        curr_x = data[f"col{col}"][0]
+        curr_y = data[f"col{col}"][1] + data[f"lines{col}"]
+        img.line([(curr_x, curr_y), (curr_x+data[f"col{col}"][2], curr_y)], fill="yellow", width=5)
+        for line in lines[0]:
+            curr_y += line
+            # print(f"{curr_x=} {curr_y=}")
+            img.line([(curr_x, curr_y), (curr_x+data[f"col{col}"][2], curr_y)], fill="yellow", width=5)
 
     mask = Image.new(mode="L", size=bg.size)
     m = ImageDraw.Draw(mask)
-    ink = Image.open("./Abstract-Black-Ink-Textures.jpg").resize(bg.size)
+    # ink = Image.open("./Abstract-Black-Ink-Textures.jpg").resize(bg.size)
     ink2 = Image.open("./ink.png").resize(bg.size)
 
-    with open("./sample.txt", "r") as sample:
-        words = sample.readline().split()
-        margin = [C_MARGIN, R_MARGIN]
-        idx = 0
-        col = 0
-        nb_line = 0
-        for line in lines:
-            ori_x, ori_y, end_x, end_y = line
-            txt = words[idx]
-            new_txt = txt
-            bb = font.getbbox(txt, direction="ltr", language="la", anchor="ls")
-            loc = bb[2] + ori_x
-            # print(f"{loc=} vs {col[current_col][3]+margin[current_col]//3}")
-            while loc < end_x-160:
-                # adding a new word to the line would go over the column width + margin
-                # print line without new word and start on a new line with new word
-                txt = new_txt
-                idx += 1
-                new_txt += words[idx] + " "
-                bb = font.getbbox(txt, direction="ltr", language="la", anchor="ls")
-                loc = bb[2] + ori_x
-
-            ori_x, ori_y, _, _ = line
-            m.text((ori_x, ori_y), txt, font=font, fill="white", language="la", direction="ltr", anchor="ls")
+    # with open("./sample.txt", "r") as sample:
+    #     words = sample.readline().split()
+    #     margin = [C_MARGIN, R_MARGIN]
+    #     idx = 0
+    #     col = 0
+    #     nb_line = 0
+    #     for line in lines:
+    #         ori_x, ori_y, end_x, end_y = line
+    #         txt = words[idx]
+    #         new_txt = txt
+    #         bb = font.getbbox(txt, direction="ltr", language="la", anchor="ls")
+    #         loc = bb[2] + ori_x
+    #         # print(f"{loc=} vs {col[current_col][3]+margin[current_col]//3}")
+    #         while loc < end_x-160:
+    #             # adding a new word to the line would go over the column width + margin
+    #             # print line without new word and start on a new line with new word
+    #             txt = new_txt
+    #             idx += 1
+    #             new_txt += words[idx] + " "
+    #             bb = font.getbbox(txt, direction="ltr", language="la", anchor="ls")
+    #             loc = bb[2] + ori_x
+    #
+    #         ori_x, ori_y, _, _ = line
+    #         m.text((ori_x, ori_y), txt, font=font, fill="white", language="la", direction="ltr", anchor="ls")
             # txt_mask = font.getmask2(txt, mode="L", direction="ltr", language="la", anchor="ls")
             # txt_mask2 = Image.frombytes(txt_mask[0].mode, txt_mask[0].size, bytes(txt_mask[0]))
             # mask.paste(txt_mask2, box=(ori_x, ori_y))
             
                 
-    mask.show()
-    # bg.show()
-    final = Image.composite(bg, ink2, mask=ImageOps.invert(mask))
-    final.show()
+    # mask.show()
+    bg.show()
+    # final = Image.composite(bg, ink2, mask=ImageOps.invert(mask))
+    # final.show()
     man.close_background()
