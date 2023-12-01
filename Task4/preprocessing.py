@@ -123,7 +123,7 @@ for file in ["e-codices_csg-0231_084_max.jpg"]:
     p, inner_top = detect_page(file, img)
     page_cols = detect_cols(file, img)
     for col in page_cols:
-        col_lines = detect_lines(img[col[1]:(col[1]+col[3]), col[0]:(col[0]+col[2])])
+        col_lines = detect_lines(img[col[1]:(col[1]+col[3]), col[0]:(col[0]+col[2])], True)
         col_lines.sort()
         lines.append(col_lines)
     dist = []
