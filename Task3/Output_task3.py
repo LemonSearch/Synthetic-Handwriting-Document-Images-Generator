@@ -6,7 +6,7 @@ from Sentence import load_images_for_sentence, calculate_size, create_final_imag
 def reproduce_ink (list_image):
     ink_images = []
     for image in list_image:
-        image_height, image_width = image.size
+        image_width, image_height = image.size
         # Create an ink texture
         ink_texture = np.zeros((image_height, image_width, 3), dtype=np.uint8)  # Add an alpha channel
         ink_opacity = 0.5  # Ink opacity
@@ -82,14 +82,18 @@ def reproduce_text(font_size, text_position, max_line_width, image_dir):
 
     # Draw text on a separate image
     list_images = draw_text_with_boxes(font, font_size, text_position, text, max_line_width, image_dir)
+    list_images[0].show()
 
     # Generate ink texture with varying shades of brown
     ink_images = reproduce_ink(list_images)
+    return ink_images
 
 # Example usage
-font_size = 13
-text_position = (50, 200)
-max_line_width = 1200
-image_dir = '...\\Dictionary' # Insert your directory
+if __name__ == "__main__":
+    font_size = 13
+    text_position = (50, 200)
+    max_line_width = 1200
+    image_dir = "./Dictionary/" # Insert your directory
 
-reproduce_text(font_size, text_position, max_line_width, image_dir)
+    r = reproduce_text(font_size, text_position, max_line_width, image_dir)
+    r[0].show()
