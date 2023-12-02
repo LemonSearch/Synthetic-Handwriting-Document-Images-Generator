@@ -1,7 +1,7 @@
 from PIL import ImageDraw
 import yaml
 import numpy as np
-import Task3.Output_task3 as TextGen
+import Task4.Output_task3 as TextGen
 import Task4.layout as LayoutGen
 
 if __name__ == "__main__":
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     bg.show()
     man.close_background()
 
-    r = TextGen.draw_text_with_boxes("./Task3/image.jpg", "./Task3/carolus.ttf", 13, (50, 200),\
+    r = TextGen.draw_text_with_boxes("./Task4/Texterase/e1.jpg", "./Task3/carolus.ttf", 13, (50, 200),\
                                "o", "./Task3/transcript.txt", 1200)
-    print(type(r))
+    print(r)
 
