@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from faker import Faker
-from Sentence import load_images_for_sentence, calculate_size, create_final_image
+from .Sentence import load_images_for_sentence, calculate_size, create_final_image
 
 def reproduce_ink (list_image):
     ink_images = []
@@ -38,10 +38,14 @@ def draw_text_with_boxes(font, font_size, text_position, text, max_line_width, i
     # Process text and create lines
     for word in text.split(' '):
         # Calculate the width of the word
-        word_bbox = font.getbbox(word)
+        # (Flavien) I Added some paramters here that may be necessary
+        word_bbox = font.getbbox(word, direction="ltr", language="la", anchor="ls")
         word_width = word_bbox[2] - word_bbox[0]
+        # (Flavien) Use the line bbox directly to calculate the size
+        line_bbox = font.getbbox(current_line, direction='ltr', language='la', anchor='ls')
+        line_width = line_bbox[2] - line_bbox[0]
         # Check if reaching max line width
-        if len(current_line) * font_size + word_width > max_line_width:
+        if (line_width + word_width)*font_size >= max_line_width:
             # Add current line to lines and start a new line
             lines.append(current_line)
             current_line = word
@@ -57,36 +61,46 @@ def draw_text_with_boxes(font, font_size, text_position, text, max_line_width, i
         total_width, max_height = calculate_size(loaded_images, letter_spacing, word_spacing)
         final_image = create_final_image(loaded_images, total_width, max_height+40, letter_spacing)
         left, upper, right, lower = final_image.getbbox()
+        """(Flavien) This should take the coordinated form the bbox of the text instead
+            of the image generated from the text. This way we can have the coordinates of the baselie
+            with the argument 'anchor='ls'' like I did before.
+        """
         # Store coordinates in a list for the current line image
-        coordinates = [left, upper, right, lower]
+        coordinates = (left, upper, right, lower)
         # Append the coordinates to the list of all coordinates
         all_coordinates.append(coordinates)
         # Append the line images to the list of all lines
         images.append(final_image)
-    return images
+    # (flavien) Made the method return the coordinated in case I need them
+    return images, all_coordinates
 
-def generate_text():
-        fake = Faker('la')  # 'la' is the language code for Latin
+def generate_text(fake_txt=False):
+        latin_text = ""
+        if fake_txt:
+            fake = Faker('la')  # 'la' is the language code for Latin
 
-        latin_text = fake.text(max_nb_chars=500)  # Adjust the number as needed
+            latin_text = fake.text(max_nb_chars=1000)  # Adjust the number as needed
+        else:
+            with open("./Task3/latin.txt") as latin:
+                latin_text = latin.read(2000)
 
         return latin_text
 
 def reproduce_text(font_size, text_position, max_line_width, image_dir):
     # Load the TTF font
-    font_path = "carolus.ttf"
-    font = ImageFont.truetype(font_path, font_size)
+    # (flavien) Had to change the path to be relative to the main.py
+    font_path = "./Task3/carolus.ttf"
+    font = ImageFont.truetype(font_path, font_size, encoding="unic")
 
     # Extract the transcript text from a file .txt
     text = generate_text()
 
     # Draw text on a separate image
-    list_images = draw_text_with_boxes(font, font_size, text_position, text, max_line_width, image_dir)
-    list_images[0].show()
+    list_images, list_coord = draw_text_with_boxes(font, font_size, text_position, text, max_line_width, image_dir)
 
     # Generate ink texture with varying shades of brown
     ink_images = reproduce_ink(list_images)
-    return ink_images
+    return list_images, ink_images, list_coord
 
 # Example usage
 if __name__ == "__main__":
@@ -95,5 +109,7 @@ if __name__ == "__main__":
     max_line_width = 1200
     image_dir = "./Dictionary/" # Insert your directory
 
-    r = reproduce_text(font_size, text_position, max_line_width, image_dir)
-    r[0].show()
+    t, i, c = reproduce_text(font_size, text_position, max_line_width, image_dir)
+    t[0].show()
+    i[0].show()
+    print(c[0])

@@ -10,7 +10,8 @@ def load_images_for_sentence(sentence, image_dir):
                 character_image = Image.open(image_path)
                 images.append((char, character_image))
             except IOError:
-                print(f"Image for {char} not found.")
+                pass
+                #print(f"Image for {char} not found.")
         else:
             images.append((' ', None))
     return images
@@ -22,7 +23,7 @@ def calculate_size(loaded_images, letter_spacing, word_spacing):
     return total_width, max_height
 
 def create_final_image(loaded_images, total_width, max_height, letter_spacing):
-    final_image = Image.new('RGB', (total_width, max_height), (0, 0, 0))
+    final_image = Image.new('L', (total_width, max_height), 0)
     current_width = 0
     for char, image in loaded_images:
         if image:
