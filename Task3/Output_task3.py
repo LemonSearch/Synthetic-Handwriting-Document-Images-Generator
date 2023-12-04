@@ -1,27 +1,31 @@
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import numpy as np
+import random
 from faker import Faker
 from .Sentence import load_images_for_sentence, calculate_size, create_final_image
 
 def reproduce_ink (list_image):
     ink_images = []
+    density = 0.1 # Can be changed
     for image in list_image:
-        image_width, image_height = image.size
+        width, height = image.size
         # Create an ink texture
-        ink_texture = np.zeros((image_height, image_width, 3), dtype=np.uint8)  # Add an alpha channel
-        ink_opacity = 0.5  # Ink opacity
-        brown_color = (51, 34, 24)
-        # Generate ink texture with varying shades of brown
-        for i in range(image_height):
-            for j in range(image_width):
-                if np.random.rand() < ink_opacity:
-                    # Vary the intensity levels for red and green channels
-                    intensity = np.random.randint(34, 78)  # Adjust the range as needed
-                    ink_texture[i, j] = (intensity, intensity // 2, 0)  # Brown color
-                else:
-                    ink_texture[i, j] = brown_color
-        # Convert ink texture to PIL Image
-        ink_texture_image = Image.fromarray(ink_texture, 'RGB')
+        ink_texture_image = Image.new("RGBA", (width, height), (255, 255, 255, 255))
+        draw = ImageDraw.Draw(ink_texture_image)
+
+        num_ink_spots = int(width * height * density)
+
+        for _ in range(num_ink_spots):
+            x = random.randint(0, width - 1)
+            y = random.randint(0, height - 1)
+            ink_color = (0, 0, 0, random.randint(150, 240))  # Varying transparency
+            brush_size = random.randint(1, 5)
+
+            # Use ellipses for ink spots
+            draw.ellipse([x - brush_size, y - brush_size, x + brush_size, y + brush_size], fill=ink_color)
+
+        # Apply blur for a subtle smudging effect
+        ink_texture_image = ink_texture_image.filter(ImageFilter.GaussianBlur(radius=1))
         ink_images.append(ink_texture_image)
     return ink_images
 
@@ -30,19 +34,17 @@ def draw_text_with_boxes(font, font_size, text_position, text, max_line_width, i
     # Initialize variables
     images = []
     lines = []
-    current_line = ''    
-    letter_spacing = 2
-    word_spacing = 45
+    current_line = ''
     all_coordinates = [] # List to store coordinates of multiple images
 
     # Process text and create lines
     for word in text.split(' '):
         # Calculate the width of the word
         # (Flavien) I Added some paramters here that may be necessary
-        word_bbox = font.getbbox(word, direction="ltr", language="la", anchor="ls")
+        word_bbox = font.getbbox(word)
         word_width = word_bbox[2] - word_bbox[0]
         # (Flavien) Use the line bbox directly to calculate the size
-        line_bbox = font.getbbox(current_line, direction='ltr', language='la', anchor='ls')
+        line_bbox = font.getbbox(current_line)
         line_width = line_bbox[2] - line_bbox[0]
         # Check if reaching max line width
         if (line_width + word_width)*font_size >= max_line_width:
@@ -58,8 +60,8 @@ def draw_text_with_boxes(font, font_size, text_position, text, max_line_width, i
     
     for line in lines:
         loaded_images = load_images_for_sentence(line, image_dir)
-        total_width, max_height = calculate_size(loaded_images, letter_spacing, word_spacing)
-        final_image = create_final_image(loaded_images, total_width, max_height+40, letter_spacing)
+        total_width, max_height, letter_spaces, word_spaces = calculate_size(loaded_images)
+        final_image = create_final_image(loaded_images, total_width, max_height+40, letter_spaces, word_spaces)
         left, upper, right, lower = final_image.getbbox()
         """(Flavien) This should take the coordinated form the bbox of the text instead
             of the image generated from the text. This way we can have the coordinates of the baselie
