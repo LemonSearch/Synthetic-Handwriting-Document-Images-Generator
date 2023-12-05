@@ -18,8 +18,8 @@ def reproduce_ink (list_image):
         for _ in range(num_ink_spots):
             x = random.randint(0, width - 1)
             y = random.randint(0, height - 1)
-            ink_color = (0, 0, 0, random.randint(150, 240))  # Varying transparency
-            brush_size = random.randint(1, 5)
+            ink_color = (92, 64, 51, random.randint(0, 150))  # Varying transparency
+            brush_size = random.randint(3, 5)
 
             # Use ellipses for ink spots
             draw.ellipse([x - brush_size, y - brush_size, x + brush_size, y + brush_size], fill=ink_color)
