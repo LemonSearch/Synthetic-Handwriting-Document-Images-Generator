@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
         # bg.show()
         final = Image.composite(bg, texture, mask=ImageOps.invert(mask))
-        final.save(f"sample_{sample}")
+        final.save(f"./out/sample_{sample}.png")
         sample += 1
         # man.close_background()
 
