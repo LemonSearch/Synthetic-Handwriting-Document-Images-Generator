@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import os
 
 def crop_image(image):
     height, width, _ = image.shape
@@ -39,15 +40,37 @@ def paste_image(original_image, result_image, position=(100, 500)):
     height, width, _ = result_image.shape
     original_image[position[1]:position[1]+height, position[0]:position[0]+width] = result_image
 
+
+def generate_background(file_list=None):
+    dataset = "./dataset/real documents/"
+    originals = list()
+    new_bg = list()
+    if file_list:
+        originals = [cv2.imread(dataset+file) for file in file_list]
+    else:
+
+        files = os.listdir(dataset)
+        originals = [cv2.imread(dataset+file) for file in files]
+    
+    for image in originals:
+        cropped_image = crop_image(image)
+        text_regions = get_text_regions(cropped_image)
+        result_image = replace_text(cropped_image, text_regions)
+        paste_image(image, result_image, position=(100, 500))
+        new_bg.append(image)
+    return new_bg 
+
+
 # Example usage
-image = cv2.imread('e-codices_csg-0231_049_max.jpg')
-cropped_image = crop_image(image)
+if __name__ == "__main__": 
+    image = cv2.imread('e-codices_csg-0231_049_max.jpg')
+    cropped_image = crop_image(image)
 
-text_regions = get_text_regions(cropped_image)
-result_image = replace_text(cropped_image, text_regions)
+    text_regions = get_text_regions(cropped_image)
+    result_image = replace_text(cropped_image, text_regions)
 
-# Paste the result_image onto the original image
-paste_image(image, result_image, position=(100, 500))
+    # Paste the result_image onto the original image
+    paste_image(image, result_image, position=(100, 500))
 
-# Save the result
-cv2.imwrite('final_result.jpg', image)
+    # Save the result
+    cv2.imwrite('final_result.jpg', image)
