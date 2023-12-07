@@ -11,6 +11,7 @@ from Task4.preprocessing import detect_page
 if __name__ == "__main__":
     cv2_bg = BGGen.generate_background()
     bgs = list()
+    sample = 1
     for i in cv2_bg:
         pil_bg = Image.fromarray(cv2.cvtColor(i, cv2.COLOR_BGR2RGB))
         ori, _ = detect_page(name="", img=cv2.cvtColor(i, cv2.COLOR_BGR2RGB))
@@ -29,7 +30,6 @@ if __name__ == "__main__":
         texture = Image.new("RGB", bg.size, (255,255,255))
         img = ImageDraw.Draw(bg)
         lines = np.round(data["orient"][orient]["line_d_std"]/2 * np.random.randn(1, 25) + data["orient"][orient]["avg_line_d"])
-        print(lines)
         nb_line = 0
         text, ink, coords = TextGen.reproduce_text(font_size=9, text_position=(0,0),\
                                                    max_line_width=1100, image_dir="./Task3/Dictionary/")
@@ -62,6 +62,7 @@ if __name__ == "__main__":
 
         # bg.show()
         final = Image.composite(bg, texture, mask=ImageOps.invert(mask))
-        final.show()
+        final.save(f"sample_{sample}")
+        sample += 1
         # man.close_background()
 
