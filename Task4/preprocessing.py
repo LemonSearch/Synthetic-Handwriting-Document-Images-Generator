@@ -78,6 +78,7 @@ def detect_cols(name, img, show=False):
     if show:
         bounds = Image.fromarray(img2)
         bounds.show()
+    cols.sort(key= lambda x: x[0])
     return cols
     
 
@@ -112,39 +113,116 @@ def detect_lines(col_img, show=False):
 
     return baselines
 
+if __name__ == "__main__": 
+    page_info = []
+    dist = {0: [], 1: []}
+    cols1 = {0: {"x": [], "y": [], "w": [], "h": []},
+             1: {"x": [], "y": [], "w": [], "h": []}
+             }
+    cols2 = {0: {"x": [], "y": [], "w": [], "h": []},
+             1: {"x": [], "y": [], "w": [], "h": []}
+             }
+    line1 = {0: [], 1: []}
+    line2 = {0: [], 1: []}
+    nb_lines = []
+    for file in os.listdir(DATASET):
+    # for file in ["e-codices_csg-0231_084_max.jpg"]:
+        lines = list()
+        cols = list()
+        img = cv2.imread(DATASET+file)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        p, inner_top = detect_page(file, img)
+        
+        page_cols = detect_cols(file, img)
+        c = 0
+        for col in page_cols:
+            col_lines = detect_lines(img[col[1]:(col[1]+col[3]), col[0]:(col[0]+col[2])])
+            col_lines.sort()
+            lines.append(col_lines)
+            if c == 0:
+                cols1[p]["x"].append(col[0])
+                cols1[p]["y"].append(col[1])
+                cols1[p]["w"].append(col[2])
+                cols1[p]["h"].append(col[3])
+                line1[p].append(col_lines[0])
+                c = 1
+            else:
+                cols2[p]["x"].append(col[0])
+                cols2[p]["y"].append(col[1])
+                cols2[p]["w"].append(col[2])
+                cols2[p]["h"].append(col[3])
+                line2[p].append(col_lines[0])
+                c = 0
+            nb_lines.append(len(col_lines))
+        # line1[p].append(lines[0][0])
+        # line2[p].append(lines[1][0])
 
-page_info = []
-# for file in os.listdir(DATASET):
-for file in ["e-codices_csg-0231_084_max.jpg"]:
-    lines = []
-    cols = []
-    img = cv2.imread(DATASET+file)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    p, inner_top = detect_page(file, img)
-    page_cols = detect_cols(file, img)
-    for col in page_cols:
-        col_lines = detect_lines(img[col[1]:(col[1]+col[3]), col[0]:(col[0]+col[2])], True)
-        col_lines.sort()
-        lines.append(col_lines)
-    dist = []
-    for col_lines in lines:
-        for i in range(len(col_lines)-1):
-            d = col_lines[i+1]-col_lines[i]
-            dist.append(d)
-    page_info.append((p, inner_top, *page_cols, *lines))
-    print(page_info)
-    print(len(page_info[0][4]), len(page_info[0][5]))
+        for col_lines in lines:
+            for i in range(len(col_lines)-1):
+                d = col_lines[i+1]-col_lines[i]
+                dist[p].append(d)
     with open('config.yaml', 'w') as writer:
         data_doc = {
-            'orient': p,
-            'anchor': inner_top,
-            'col1': page_cols[0],
-            'col2': page_cols[1],
-            'lines1': lines[0][0],
-            'lines2': lines[1][0],
-            "avg_line_d": float(np.array(dist).mean()),
-            "line_d_std": float(np.array(dist).std())
+            'orient': {
+            0:
+                {
+                    'col1': (float(np.array(cols1[0]["x"]).mean()),
+                             float(np.array(cols1[0]["y"]).mean()),
+                             float(np.array(cols1[0]["w"]).mean()),
+                             float(np.array(cols1[0]["h"]).mean())
+                             ),
+                    'col1_std': (float(np.array(cols1[0]["x"]).std()),
+                                 float(np.array(cols1[0]["y"]).std()),
+                                 float(np.array(cols1[0]["w"]).std()),
+                                 float(np.array(cols1[0]["h"]).std())
+                                 ),
+                    'col2': (float(np.array(cols2[0]["x"]).mean()), 
+                             float(np.array(cols2[0]["y"]).mean()),
+                             float(np.array(cols2[0]["w"]).mean()), 
+                             float(np.array(cols2[0]["h"]).mean())
+                             ),
+                    'col2_std': (float(np.array(cols2[0]["x"]).std()), 
+                                 float(np.array(cols2[0]["y"]).std()), 
+                                 float(np.array(cols2[0]["w"]).std()), 
+                                 float(np.array(cols2[0]["h"]).std())
+                                 ),
+                    'line1': float(np.array(line1[0]).mean()),
+                    'line1_std': float(np.array(line1[0]).std()),
+                    'line2': float(np.array(line2[0]).mean()),
+                    'line2_std': float(np.array(line2[0]).std()),
+                    "avg_line_d": float(np.array(dist[0]).mean()),
+                    "line_d_std": float(np.array(dist[0]).std())
+                },
+            1:
+                {
+                    'col1': (float(np.array(cols1[1]["x"]).mean()), 
+                             float(np.array(cols1[1]["y"]).mean()), 
+                             float(np.array(cols1[1]["w"]).mean()), 
+                             float(np.array(cols1[1]["h"]).mean())
+                             ),
+                    'col1_std': (float(np.array(cols1[1]["x"]).std()), 
+                                 float(np.array(cols1[1]["y"]).std()), 
+                                 float(np.array(cols1[1]["w"]).std()), 
+                                 float(np.array(cols1[1]["h"]).std())
+                                 ),
+                    'col2': (float(np.array(cols2[1]["x"]).mean()), 
+                             float(np.array(cols2[1]["y"]).mean()), 
+                             float(np.array(cols2[1]["w"]).mean()), 
+                             float(np.array(cols2[1]["h"]).mean())
+                             ),
+                    'col2_std': (float(np.array(cols2[1]["x"]).std()), 
+                                 float(np.array(cols2[1]["y"]).std()), 
+                                 float(np.array(cols2[1]["w"]).std()), 
+                                 float(np.array(cols2[1]["h"]).std())
+                                 ),
+                    'line1': float(np.array(line1[1]).mean()),
+                    'line1_std': float(np.array(line1[1]).std()),
+                    'line2': float(np.array(line2[1]).mean()),
+                    'line2_std': float(np.array(line2[1]).std()),
+                    "avg_line_d": float(np.array(dist[1]).mean()),
+                    "line_d_std": float(np.array(dist[1]).std()) 
+                }
+            }
         }
         yaml.dump(data_doc, writer)
-    print(np.array(dist).mean(), np.array(dist).std())
-    # print(dist)
+        # print(dist)
