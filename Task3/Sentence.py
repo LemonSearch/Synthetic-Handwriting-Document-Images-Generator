@@ -41,7 +41,7 @@ def calculate_size(loaded_images):
             total_width += word_spacing
             word_spaces.append(word_spacing)
 
-    return total_width, max_height+34+14, letter_spaces, word_spaces
+    return total_width, max_height+34, letter_spaces, word_spaces
 
 def transform_image(image):
     rotation_angle = random.uniform(-2, 2)
@@ -64,44 +64,60 @@ def create_final_image(loaded_images, total_width, max_height, letter_spaces, wo
     letter_position = []
     letter_space_index = 0
     word_space_index = 0
+
     for char, image in loaded_images:
         letter_position.append(current_width)
         if image:
             image = transform_image(image)
-            if char == 'f':
-              offset = -19
-            elif char == 'g':
-              offset = 0
-            elif char in ['p', 'q']:
-              offset = -14
-            elif char == 'j':
-              offset = -3
-            elif char == 'F':
-              offset = -13
-            elif char == 'G':
-              offset = -23
-            elif char == 'H':
-              offset = -31
-            elif char == 'J':
-              offset = -6
-            elif char == 'P':
-              offset = -20
-            elif char == 'Q':
-              offset = -22
-            elif char == 'R':
-              offset = -22
-            elif char == 'T':
-              offset = -31
-            elif char == 'Y':
-              offset = 0
-            elif char == 'Z':
-              offset = -30
-            else:
-              offset = -34
+            offset = calculate_offset(char)
             final_image.paste(image, (current_width, max_height - image.size[1] + offset))
             current_width += image.size[0] + letter_spaces[letter_space_index]
             letter_space_index += 1
         else:
             current_width += word_spaces[word_space_index]
             word_space_index += 1
-    return final_image
+
+    return final_image, letter_position
+
+def calculate_offset(char):
+    offsets = {'f': -19, 'g': 0, 'p': -14, 'q': -14, 'j': -3, 'F': -13,
+               'G': -23, 'H': -31, 'J': -6, 'P': -20, 'Q': -22, 'R': -22,
+               'T': -31, 'Y': 0, 'Z': -30}
+    return offsets.get(char, -34)
+
+def make_black_transparent(image, shift_white_letter):
+
+    img = image
+    img = img.convert("RGBA")
+    data = np.array(img)
+
+    red, green, blue, alpha = data[:,:,0], data[:,:,1], data[:,:,2], data[:,:,3]
+    dark_mask = (red < 100) & (green < 100) & (blue < 100)
+    data[:,:,:4][dark_mask] = [0, 0, 0, 0]
+
+    if shift_white_letter:
+      # Invert bright pixels (RGB > 200)
+      bright_mask = (red > 200) & (green > 200) & (blue > 200)
+      data[:,:,0][bright_mask] = 255 - data[:,:,0][bright_mask]
+      data[:,:,1][bright_mask] = 255 - data[:,:,1][bright_mask]
+      data[:,:,2][bright_mask] = 255 - data[:,:,2][bright_mask]
+
+    new_img = Image.fromarray(data)
+
+    return new_img
+
+# demo
+# image_dir = './Dictionary'
+
+# # Put your latin sentence here:
+# sentence = "nomenq genusql"
+# # Hope our work will help more people.
+# sentence = "Spes Laboris Nostri Plus Potest Adiuvare Homines YYYYY."
+
+# loaded_images = load_images_for_sentence(sentence, image_dir)
+# total_width, max_height, letter_spaces, word_spaces = calculate_size(loaded_images)
+# final_image, letter_position = create_final_image(loaded_images, total_width, max_height, letter_spaces, word_spaces)
+# final_image = make_black_transparent(final_image, shift_white_letter=True) # choose shift white letter to black or not
+# final_image_path = os.path.join(image_dir, "final_sentence_image.png")
+# final_image.save(final_image_path)
+# print("Image created and saved to", final_image_path)
