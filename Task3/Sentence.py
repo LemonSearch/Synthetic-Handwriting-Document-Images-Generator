@@ -104,4 +104,4 @@ def create_final_image(loaded_images, total_width, max_height, letter_spaces, wo
         else:
             current_width += word_spaces[word_space_index]
             word_space_index += 1
-    return final_image, letter_position
+    return final_image
