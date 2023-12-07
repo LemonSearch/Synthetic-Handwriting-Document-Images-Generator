@@ -41,7 +41,7 @@ def draw_text_with_boxes(font, font_size, text_position, text, max_line_width, i
     for word in text.split(' '):
         # Calculate the width of the word
         # (Flavien) I Added some paramters here that may be necessary
-        word_bbox = font.getbbox(word)
+        word_bbox = font.getbbox(word, anchor="ls")
         word_width = word_bbox[2] - word_bbox[0]
         # (Flavien) Use the line bbox directly to calculate the size
         line_bbox = font.getbbox(current_line)
