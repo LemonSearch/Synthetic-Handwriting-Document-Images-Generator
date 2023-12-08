@@ -26,14 +26,16 @@ def load_images_for_sentence(sentence, image_dir):
               character_image = Image.open(image_path)
               images.append((char, character_image))
             except IOError:
-              print(f"Image for {char} not found.")
+                pass
+                #print(f"Image for {char} not found.")
           else:
             image_path = os.path.join(image_dir, f"{char}_c_1.png")
             try:
               character_image = Image.open(image_path)
               images.append((char, character_image))
             except IOError:
-              print(f"Image for {char} not found.")
+                pass
+                #print(f"Image for {char} not found.")
         else:
           images.append((' ', None))
     return images

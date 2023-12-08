@@ -117,7 +117,7 @@ def draw_text_with_boxes(font, font_size, text_position, text, max_line_width, i
         lines.append(current_line)
 
     for line in lines:
-        print(line)
+        #print(line)
         loaded_images = load_images_for_sentence(line, image_dir)
         total_width, max_height, letter_spaces, word_spaces = calculate_size(loaded_images)
         final_image, letter_positions, word_lengths, word_spaces, ink_chars, up_chars = create_final_image(loaded_images, total_width, max_height+40, letter_spaces, word_spaces)

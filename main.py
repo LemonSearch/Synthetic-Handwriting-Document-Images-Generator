@@ -29,10 +29,12 @@ if __name__ == "__main__":
         mask = Image.new("L", bg.size, 0)
         texture = Image.new("RGB", bg.size, (255,255,255))
         img = ImageDraw.Draw(bg)
-        lines = np.round(data["orient"][orient]["line_d_std"]/2 * np.random.randn(1, 25) + data["orient"][orient]["avg_line_d"])
+        lines = np.round(random.uniform(data["orient"][orient]["avg_line_d"],
+                                            data["orient"][orient]["avg_line_d"] + data["orient"][orient]["line_d_std"]*2))
         nb_line = 0
-        text, ink, coords = TextGen.reproduce_text(font_size=9, text_position=(0,0),\
+        text, ink, coords, baseline = TextGen.reproduce_text(font_size=9, text_position=(0,0),\
                                                    max_line_width=1100, image_dir="./Task3/Dictionary/")
+        baseline += 40
         for col in range(1, 3):
             curr_x = round(data["orient"][orient][f"col{col}"][0])
             line_y = np.round(random.uniform(data["orient"][orient][f"line{col}"] - data["orient"][orient][f"line{col}_std"],
@@ -41,20 +43,20 @@ if __name__ == "__main__":
             line_txt = text[nb_line]
             line_ink = ink[nb_line]
             line_coord = coords[nb_line]
-            mask.paste(line_txt, (curr_x, curr_y))
-            texture.paste(line_ink, (curr_x, curr_y))
+            mask.paste(line_txt, (curr_x, curr_y-baseline))
+            texture.paste(line_ink, (curr_x, curr_y-baseline))
             img.line([(curr_x, curr_y), (curr_x+round(data["orient"][orient][f"col{col}"][2]), curr_y)], fill="yellow", width=5)
             nb_line += 1
-            for line in lines[0]:
+            for line in range(1, 25):
                 if nb_line == len(text)-1:
                     nb_line = 0
-                curr_y += line
+                curr_y += lines
                 curr_y = int(curr_y)
                 line_txt = text[nb_line]
                 line_ink = ink[nb_line]
                 line_coord = coords[nb_line]
-                mask.paste(line_txt, (curr_x, curr_y))
-                texture.paste(line_ink, (curr_x, curr_y))
+                mask.paste(line_txt, (curr_x, curr_y-baseline))
+                texture.paste(line_ink, (curr_x, curr_y-baseline))
                 nb_line += 1
 
                 # print(f"{curr_x=} {curr_y=}")
