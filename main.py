@@ -1,30 +1,61 @@
-from PIL import ImageDraw, Image, ImageOps
+import re
+from PIL import Image
 import cv2
-import yaml
-import numpy as np
+import os
 import random
 import Task1.TextErase_MarginProtect as BGGen
-import Task3.Output_task3 as TextGen
 import Task4.layout as LayoutGen
-from Task4.preprocessing import detect_page 
+import argparse
+from Task4.preprocessing import detect_page
+
+IN = "./in/"
+OUT = "./out/"
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--nb", type=int, default=20,
+    help="Define the number of synthetic pages to generate"
+)
+parser.add_argument(
+    "--gen", type=int, default=0,
+    help="Generate new background. 0=False, will use present background images\
+            1=True, will regenerate new background"
+)
+parser.add_argument(
+    "--overwrite", type=int, default=1,
+    help="Default is 1. If set to 0 any new files will be added to the output instead of overwritting them, including the TSV file"
+)
+
+args = parser.parse_args()
 
 if __name__ == "__main__":
-    cv2_bg = BGGen.generate_background()
-    bgs = list()
-    sample = 1
-    for i in cv2_bg:
-        pil_bg = Image.fromarray(cv2.cvtColor(i, cv2.COLOR_BGR2RGB))
-        ori, _ = detect_page(img=cv2.cvtColor(i, cv2.COLOR_BGR2RGB))
-        if ori == 0:
-            bgs.append(pil_bg)
-    config = LayoutGen.get_config()
+    files = os.listdir(IN)
+    if args.gen or len(files) == 0:
+        cv2_bg = BGGen.generate_background()
+        sample = 1
+        for i in cv2_bg:
+            pil_bg = Image.fromarray(cv2.cvtColor(i, cv2.COLOR_BGR2RGB))
+            ori, _ = detect_page(img=cv2.cvtColor(i, cv2.COLOR_BGR2RGB))
+            if ori == 0:
+                pil_bg.save(f"{IN}sample{sample}.png")
+                sample+=1
 
-    for bg in bgs:
-        img = LayoutGen.generate_layout(bg, config)
-        img.show()
-        if sample:
-            break
-    #     # man = LayoutGen.Manuscript()
+    files = os.listdir(IN)
+    config = LayoutGen.get_config()
+    id = max(re.findall(r"\d+", "-".join(map(str, os.listdir(OUT)))))
+    if args.overwrite:
+        id = 301
+        for file in os.listdir(OUT):
+            os.remove(OUT+file)
+
+    for _ in range(args.nb):
+        bg = random.choice(files)
+        bg = Image.open(IN+bg)
+        page_id = f"csg-0231_{id}"
+        img = LayoutGen.generate_layout(bg, config, page_id=page_id)
+        img.save(OUT+page_id)
+        id += 2
+            #     # man = LayoutGen.Manuscript()
     #     # man.get_background("./Task4/Texterase/e1.jpg")
     #     # lines = man.get_lines()
     #     # bg = man.background

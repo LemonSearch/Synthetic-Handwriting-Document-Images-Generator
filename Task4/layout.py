@@ -5,9 +5,10 @@ import yaml
 import Task3.Output_task3 as TextGen
 from Task4.preprocessing import detect_page
 
+COLUMNS=["L", "R"]
 
 
-def generate_layout(input_bg, config: dict):
+def generate_layout(input_bg, config: dict, page_id):
     """
     Generate a new document image based on the input blank page image.
     """
@@ -62,22 +63,27 @@ def generate_layout(input_bg, config: dict):
 
         line_text = text_list[nb_line]
         line_ink = ink_list[nb_line]
+        line_coord = coords[nb_line]
         mask.paste(line_text, (curr_x, curr_y-baseline))
         texture.paste(line_ink, (curr_x, curr_y-baseline))
         nb_line += 1
+        line_pos = (curr_x, curr_y-baseline, curr_x+line_coord[2], curr_y-baseline+line_coord[3])
+        write_tsv(page_id, COLUMNS[col-1], format_int(nb_line), line_pos, line_y, "", (0, 0))
         for line in range(1, 25):
             # if nb_line == len(text)-1:
             #     nb_line = 0
             curr_y = int(curr_y+lines_spacing)
             line_text = text_list[nb_line]
             line_ink = ink_list[nb_line]
+            line_coord = coords[nb_line]
             mask.paste(line_text, (curr_x, curr_y-baseline))
             texture.paste(line_ink, (curr_x, curr_y-baseline))
             nb_line += 1
+            line_pos = (curr_x, curr_y-baseline, curr_x+line_coord[2], curr_y-baseline+line_coord[3])
+            write_tsv(page_id, COLUMNS[col-1], format_int(nb_line), line_pos, line_y, "", (0, 0))
     final = Image.composite(input_bg, texture, mask=ImageOps.invert(mask))
     
     return final
-
 
 
 def get_config():
@@ -100,3 +106,21 @@ def get_random_value(avg, std, type):
     else:
         return round(random.uniform(avg, avg+std))
 
+
+def write_tsv(page_id, column_id, line_id, line_pos, baseline, string, word_pos):
+    header = f"{page_id}_{column_id}_{line_id}"
+    line = f"{','.join(map(str, line_pos))}\t{baseline}\t{'-'.join(map(str, string))}\t{word_pos}"
+    line_tsv = f"{header}\t{line}\n"
+    with open("./out/ground_truth.tsv", "a") as tsv:
+        tsv.write(line_tsv)
+
+
+def format_int(line_id):
+    line_id += 1
+    if line_id > 26:
+        line_id -= 26
+
+    if line_id < 10:
+        return f"0{line_id}"
+    else:
+        return f"{line_id}"

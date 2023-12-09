@@ -118,7 +118,7 @@ def generate_text(fake_txt=False):
             latin_text = fake.text(max_nb_chars=1000)  # Adjust the number as needed
         else:
             with open("./Task3/latin.txt") as latin:
-                latin_text = latin.read(2000)
+                latin_text = latin.read()
 
         return latin_text
 
