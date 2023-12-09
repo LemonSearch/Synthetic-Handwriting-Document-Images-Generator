@@ -91,23 +91,45 @@ def generate_background_with_stains(background_path, stains_folder, output_folde
         background = Image.open(background_path).convert("RGBA")
 
 
-image = cv2.imread('e-codices_csg-0231_088_max.jpg')
-cropped_image = crop_image(image)
+def generate_background(file_list=None):
+    dataset = "./dataset/real documents/"
+    originals = list()
+    new_bg = list()
+    if file_list:
+        originals = [cv2.imread(dataset+file) for file in file_list]
+    else:
 
-text_regions = get_text_regions(cropped_image)
-result_image = replace_text(cropped_image, text_regions)
+        files = os.listdir(dataset)
+        originals = [cv2.imread(dataset+file) for file in files]
+    
+    for image in originals:
+        cropped_image = crop_image(image)
+        text_regions = get_text_regions(cropped_image)
+        result_image = replace_text(cropped_image, text_regions)
+        paste_image(image, result_image, position=(220, 500))
+        pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
-# Paste the result_image onto the original image
-paste_image(image, result_image, position=(220, 500))
+        new_bg.append(image)
+    return new_bg 
 
-# Save the result
-cv2.imwrite('final_result.png', image)
+if __name__ == "__main__":
+    image = cv2.imread('e-codices_csg-0231_088_max.jpg')
+    cropped_image = crop_image(image)
 
-#Specify the paths to the images and folders
-background_path = "final_result.png"
-stains_folder = "Stains"
-output_folder = "GeneratedImages"
-num_images_to_generate = 13
+    text_regions = get_text_regions(cropped_image)
+    result_image = replace_text(cropped_image, text_regions)
 
-generate_background_with_stains(background_path, stains_folder, output_folder, num_images_to_generate)
+    # Paste the result_image onto the original image
+    paste_image(image, result_image, position=(220, 500))
+
+    # Save the result
+    cv2.imwrite('final_result.png', image)
+
+    #Specify the paths to the images and folders
+    background_path = "final_result.png"
+    stains_folder = "Stains"
+    output_folder = "GeneratedImages"
+    num_images_to_generate = 13
+
+    generate_background_with_stains(background_path, stains_folder, output_folder, num_images_to_generate)
 

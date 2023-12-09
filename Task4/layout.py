@@ -28,12 +28,13 @@ def generate_layout(input_bg, config: dict, page_id):
                         type=1
                     )
     # Get the lines text, ink texture, coordinates and baseline from Task 3 
-    text, ink, coords, baseline= TextGen.reproduce_text(font_size=9, text_position=(0,0),\
+    text, ink, coords, baseline, tsv_line= TextGen.reproduce_text(font_size=9, text_position=(0,0),\
                                                          max_line_width=1000, image_dir="./Task3/Dictionary/")
     # Select a random sampling of sentences for more randomness
     idx = random.sample(range(len(text)), 52)
     text_list = [text[i] for i in idx]
     ink_list = [ink[i] for i in idx]
+    tsv_lines = []
     # Adjust the baseline to work appropriately
     baseline += 42
     # Counter to keep tracks of the lines

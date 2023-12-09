@@ -3,7 +3,7 @@ from PIL import Image
 import cv2
 import os
 import random
-import Task1.TextErase_MarginProtect as BGGen
+import Task1.main_task1 as BGGen
 import Task4.layout as LayoutGen
 import argparse
 from Task4.preprocessing import detect_page
@@ -35,18 +35,18 @@ if __name__ == "__main__":
         sample = 1
         for i in cv2_bg:
             pil_bg = Image.fromarray(cv2.cvtColor(i, cv2.COLOR_BGR2RGB))
-            ori, _ = detect_page(img=cv2.cvtColor(i, cv2.COLOR_BGR2RGB))
-            if ori == 0:
-                pil_bg.save(f"{IN}sample{sample}.png")
-                sample+=1
+            pil_bg.save(f"{IN}sample{sample}.png")
+            sample+=1
 
     files = os.listdir(IN)
     config = LayoutGen.get_config()
-    id = max(re.findall(r"\d+", "-".join(map(str, os.listdir(OUT)))))
-    if args.overwrite:
-        id = 301
+
+    id = 301
+    if args.overwrite or len(os.listdir(OUT))==0:
         for file in os.listdir(OUT):
             os.remove(OUT+file)
+    else:
+        id = max(re.findall(r"\d+", "-".join(map(str, os.listdir(OUT)))))
 
     for _ in range(args.nb):
         bg = random.choice(files)
