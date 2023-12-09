@@ -1,21 +1,31 @@
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageDraw
 import os
 import random
 import numpy as np
 
 # ink generator
 def generate_ink_char(character_image):
-  copy_image = character_image.copy()
-  copy_image = copy_image.convert("RGBA")
-  datas = copy_image.getdata()
-  newData = []
-  for item in datas:
-      if item[0] == 0 and item[1] == 0 and item[2] == 0:
-        newData.append((0, 0, 0, 0))   # Make background transparent for non-character pixels
-      else:
-        newData.append((92, 64, 51, 255)) # Ink color for the character
-  copy_image.putdata(newData)
-  return copy_image
+    copy_image = character_image.copy()
+    copy_image = copy_image.convert("RGBA")
+    density = 0.1 # Can be changed
+    width, height = copy_image.size
+    # Create an ink texture
+    draw = ImageDraw.Draw(copy_image)
+
+    num_ink_spots = int(width * height * density)
+
+    for _ in range(num_ink_spots):
+        x = random.randint(0, width - 1)
+        y = random.randint(0, height - 1)
+        
+        ink_color = (92, 64, 51, random.randint(100, 150))  # Varying transparency
+        brush_size = random.randint(1, 5)
+
+        # Use ellipses for ink spots
+        draw.ellipse([x - brush_size, y - brush_size, x + brush_size, y + brush_size], fill=ink_color)
+        
+    copy_image = copy_image.filter(ImageFilter.GaussianBlur(radius=1))
+    return copy_image
 
 # sentence generator below
 def load_images_for_sentence(sentence, image_dir):
@@ -126,7 +136,7 @@ def transform_image(image):
     vertical_stretch_factor = random.uniform(0.98, 1.02)
     stretched_height = int(new_height * vertical_stretch_factor)
 
-    transformed_image = rotated_image.resize((new_width, stretched_height), Image.ANTIALIAS)
+    transformed_image = rotated_image.resize((new_width, stretched_height), Image.BICUBIC)
 
     return transformed_image
 
@@ -145,14 +155,16 @@ def create_final_image(loaded_images, total_width, max_height, letter_spaces, wo
     end_word = -2
 
     for char, image in loaded_images:
-        letter_position.append(current_width)
-        print('char: ', char)
+        # print('char: ', char)
         if image:
             image = transform_image(image)
             bottom_offset = calculate_bottom_offset(char)
             right_offset = calculate_right_offset(char)
-            ink_char  = generate_ink_char(image)
-            ink_chars.append(ink_char)
+            if char.isupper():
+                ink_char  = generate_ink_char(image)
+                ink_chars.append(ink_char)
+                letter_position.append(current_width)
+                up_chars.append(char)
             final_image.paste(image, (current_width, max_height - image.size[1] + bottom_offset))
             current_width += image.size[0] + right_offset + letter_spaces[letter_space_index]
             word_length += image.size[0] + right_offset + letter_spaces[letter_space_index]

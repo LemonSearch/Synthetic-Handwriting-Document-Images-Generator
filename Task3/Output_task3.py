@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import random
 import os
 from faker import Faker
-from .Sentence import load_images_for_sentence, calculate_size, create_final_image
+from .Sentence import load_images_for_sentence, calculate_size, create_final_image, calculate_bottom_offset
 
 def reproduce_ink (line_image, ink_chars, letter_positions, max_height, up_chars):
     density = 0.1 # Can be changed
@@ -23,32 +23,12 @@ def reproduce_ink (line_image, ink_chars, letter_positions, max_height, up_chars
         draw.ellipse([x - brush_size, y - brush_size, x + brush_size, y + brush_size], fill=ink_color)
 
     # Apply blur for a subtle smudging effect
-    ink_texture_image = ink_texture_image.filter(ImageFilter.GaussianBlur(radius=1))
-    # for ink_char, letter_position, up_char, height in zip (ink_chars, letter_positions, up_chars, heights):
-    #     if up_char == 'F':
-    #         offset = -13
-    #     elif up_char == 'G':
-    #         offset = -23
-    #     elif up_char == 'H':
-    #         offset = -31
-    #     elif up_char == 'J':
-    #         offset = -6
-    #     elif up_char == 'P':
-    #         offset = -20
-    #     elif up_char == 'Q':
-    #         offset = -22
-    #     elif up_char == 'R':
-    #         offset = -22
-    #     elif up_char == 'T':
-    #         offset = -31
-    #     elif up_char == 'Y':
-    #         offset = 0
-    #     elif up_char == 'Z':
-    #         offset = -30
-    #     else:
-    #         offset = -34
-    #     ink_texture_image.paste(ink_char, (letter_position, max_height - ink_char.size[1] + offset))
-    # ink_texture_image.show()
+    #print(max_height)
+    for ink_char, letter_position, up_char in zip (ink_chars, letter_positions, up_chars):
+        offset = calculate_bottom_offset(up_char)
+        ink_texture_image.paste(ink_char, (letter_position, max_height + 40 - ink_char.size[1] + offset))
+    ink_texture_image = ink_texture_image.filter(ImageFilter.GaussianBlur(radius=1.3))
+    #ink_texture_image.show()
     return ink_texture_image
 
 def text_lines(font, font_size, text_position, text, max_line_width, image_dir):
@@ -128,7 +108,6 @@ def reproduce_text(font_size, text_position, max_line_width, image_dir):
 
     # Extract the transcript text from a file .txt
     text = generate_text()
-    
     # Draw text on a separate image
     list_images, list_coord, blended_ink_images, baseline, tsv_line = text_lines(font, font_size, text_position, text, max_line_width, image_dir)
 
