@@ -68,48 +68,43 @@ def paste_stain(background, stain_path, position, scale_range=(0.1, 0.5), rotati
     background.paste(stain, position, stain)
 
 #Function to generate the stained image
-def generate_background_with_stains(background_path, stains_folder, output_folder, num_images=5):
-    background = Image.open(background_path).convert("RGBA")
+def generate_background_with_stains(original_background):
+    background = original_background.convert("RGBA")
+    stains_folder = "./Task1/Stains/"
+    # Randomly choose a stain image
+    stain_files = os.listdir(stains_folder)
+    selected_stain = random.choice(stain_files)
+    stain_path = os.path.join(stains_folder, selected_stain)
 
-    for i in range(num_images):
-        # Randomly choose a stain image
-        stain_files = os.listdir(stains_folder)
-        selected_stain = random.choice(stain_files)
-        stain_path = os.path.join(stains_folder, selected_stain)
+    # Randomly choose a position on the background
+    position = (random.randint(210, background.width-250), np.random.randint(600, background.height-1000))
 
-        # Randomly choose a position on the background
-        position = (random.randint(210, background.width-250), np.random.randint(600, background.height-1000))
+    # Paste the stain onto the background
+    paste_stain(background, stain_path, position)
 
-        # Paste the stain onto the background
-        paste_stain(background, stain_path, position)
+    # Save the resulting image
+    # output_path = os.path.join(output_folder, f'result_image_{i + 1}.png')
+    # background.save(output_path, format="PNG")
+    # outputs.append(background)
 
-        # Save the resulting image
-        output_path = os.path.join(output_folder, f'result_image_{i + 1}.png')
-        background.save(output_path, format="PNG")
-
-        # Reset background for the next iteration
-        background = Image.open(background_path).convert("RGBA")
+    # Reset background for the next iteration
+    # background = original_background
+    return background
 
 
-def generate_background(file_list=None):
+def generate_background():
     dataset = "./dataset/real documents/"
-    originals = list()
     new_bg = list()
-    if file_list:
-        originals = [cv2.imread(dataset+file) for file in file_list]
-    else:
-
-        files = os.listdir(dataset)
-        originals = [cv2.imread(dataset+file) for file in files]
+    files = os.listdir(dataset)
+    file = random.choice(files)
+    image = cv2.imread(dataset+file)
+    cropped_image = crop_image(image)
+    text_regions = get_text_regions(cropped_image)
+    result_image = replace_text(cropped_image, text_regions)
+    paste_image(image, result_image, position=(220, 500))
+    pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    new_bg = generate_background_with_stains(pil)
     
-    for image in originals:
-        cropped_image = crop_image(image)
-        text_regions = get_text_regions(cropped_image)
-        result_image = replace_text(cropped_image, text_regions)
-        paste_image(image, result_image, position=(220, 500))
-        pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-
-        new_bg.append(image)
     return new_bg 
 
 if __name__ == "__main__":

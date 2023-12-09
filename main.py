@@ -30,16 +30,16 @@ parser.add_argument(
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    files = os.listdir(IN)
-    if args.gen_bg or len(files) == 0:
-        cv2_bg = BGGen.generate_background()
-        sample = 1
-        for i in cv2_bg:
-            pil_bg = Image.fromarray(cv2.cvtColor(i, cv2.COLOR_BGR2RGB))
-            pil_bg.save(f"{IN}sample{sample}.png")
-            sample+=1
-
-    files = os.listdir(IN)
+    # files = os.listdir(IN)
+    # if args.gen_bg or len(files) == 0:
+    #     cv2_bg = BGGen.generate_background()
+    #     sample = 1
+    #     for i in cv2_bg:
+    #         pil_bg = Image.fromarray(cv2.cvtColor(i, cv2.COLOR_BGR2RGB))
+    #         pil_bg.save(f"{IN}sample{sample}.png")
+    #         sample+=1
+    #
+    # files = os.listdir(IN)
     config = LayoutGen.get_config()
 
     id = 300
@@ -50,8 +50,9 @@ if __name__ == "__main__":
         id = max(re.findall(r"\d+", "-".join(map(str, os.listdir(OUT)))))
 
     for _ in range(args.nb):
-        bg = random.choice(files)
-        bg = Image.open(IN+bg)
+        bg = BGGen.generate_background()
+        # bg = random.choice(files)
+        # bg = Image.open(IN+bg)
         orient, _ = detect_page(np.array(bg))
         if orient == 0:
             if id%2 == 0:
@@ -60,6 +61,8 @@ if __name__ == "__main__":
             if id%2 != 0:
                 id+=1
         page_id = f"csg-0231_{id}"
+        print("Generating " + page_id)
         img = LayoutGen.generate_layout(bg, config, page_id=page_id)
         img.save(OUT+page_id+".png")
+        id += 1
 
