@@ -89,7 +89,7 @@ def text_lines(font, font_size, text_position, text, max_line_width, image_dir):
         #print(line)
         loaded_images = load_images_for_sentence(line, image_dir)
         total_width, max_height, letter_spaces, word_spaces = calculate_size(loaded_images)
-        final_image, letter_positions, word_lengths, ink_chars, up_chars = create_final_image(loaded_images, total_width, max_height+40, letter_spaces, word_spaces)
+        final_image, letter_positions, word_coordinates, ink_chars, up_chars = create_final_image(loaded_images, total_width, max_height+40, letter_spaces, word_spaces)
         #final_image.show()
         ink_texture_image = reproduce_ink(final_image, ink_chars, letter_positions, max_height, up_chars)
         left, upper, right, lower = final_image.getbbox()
@@ -105,8 +105,7 @@ def text_lines(font, font_size, text_position, text, max_line_width, image_dir):
         ink_images.append(ink_texture_image)
         
         tsv_line.append(line)
-        tsv_line.append(word_lengths)
-        tsv_line.append(word_spaces)
+        tsv_line.append(word_coordinates)
     # (flavien) Made the method return the coordinated in case I need them
     return images, all_coordinates, ink_images, baseline_position, tsv_line
 
@@ -118,7 +117,7 @@ def generate_text(fake_txt=False):
             latin_text = fake.text(max_nb_chars=1000)  # Adjust the number as needed
         else:
             with open("./Task3/latin.txt") as latin:
-                latin_text = latin.read()
+                latin_text = latin.read(2000)
 
         return latin_text
 
@@ -134,7 +133,7 @@ def reproduce_text(font_size, text_position, max_line_width, image_dir):
     # Draw text on a separate image
     list_images, list_coord, blended_ink_images, baseline, tsv_line = text_lines(font, font_size, text_position, text, max_line_width, image_dir)
 
-    return list_images, blended_ink_images, list_coord, baseline, tsv_line
+    return list_images, blended_ink_images, list_coord, baseline
 
 # Example usage
 if __name__ == "__main__":

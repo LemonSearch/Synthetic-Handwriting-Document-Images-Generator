@@ -26,6 +26,7 @@ def load_images_for_sentence(sentence, image_dir):
               character_image = Image.open(image_path)
               images.append((char, character_image))
             except IOError:
+              
               print(f"Image for {char} not found.")
           else:
             image_path = os.path.join(image_dir, f"{char}_c_1.png")
@@ -76,7 +77,7 @@ def create_final_image(loaded_images, total_width, max_height, letter_spaces, wo
     current_width = 0
     word_length = 0
     letter_position = []
-    word_lengths = []
+    word_coordinates = []
     ink_chars = []
     up_chars = []
     letter_space_index = 0
@@ -94,12 +95,16 @@ def create_final_image(loaded_images, total_width, max_height, letter_spaces, wo
             word_length += image.size[0] + letter_spaces[letter_space_index]
             letter_space_index += 1
         else:
-            word_lengths.append(word_length)
-            word_length = 0
+            start_word = current_width - word_length
+            end_word = current_width
+            word_coordinates.append((start_word, end_word))
             current_width += word_spaces[word_space_index]
+            word_length = 0
             word_space_index += 1
-
-    return final_image, letter_position, word_lengths, ink_chars, up_chars
+    # checks if the line ends with a space
+    if start_word == end_word:
+        word_coordinates.pop()
+    return final_image, letter_position, word_coordinates, ink_chars, up_chars
 
 def calculate_offset(char):
     offsets = {'f': -19, 'g': 0, 'p': -14, 'q': -14, 'j': -3, 'F': -13,
