@@ -7,7 +7,7 @@ import numpy as np
 DATASET = "../dataset/real documents/"
 
 
-def detect_page(name, img, show=False):
+def detect_page(img, show=False):
     inner_top = (0,0)
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     threshold = 55
@@ -41,7 +41,7 @@ def detect_page(name, img, show=False):
 
     if show:
         page = Image.fromarray(img2)
-        page.show(title=name)
+        page.show()
     return p, inner_top
 
 def detect_cols(name, img, show=False):
@@ -131,7 +131,7 @@ if __name__ == "__main__":
         cols = list()
         img = cv2.imread(DATASET+file)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        p, inner_top = detect_page(file, img)
+        p, inner_top = detect_page(img)
         
         page_cols = detect_cols(file, img)
         c = 0
