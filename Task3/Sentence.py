@@ -1,8 +1,9 @@
-from PIL import Image
+from PIL import Image, ImageFilter
 import os
 import random
 import numpy as np
 
+# ink generator
 def generate_ink_char(character_image):
   copy_image = character_image.copy()
   copy_image = copy_image.convert("RGBA")
@@ -16,39 +17,90 @@ def generate_ink_char(character_image):
   copy_image.putdata(newData)
   return copy_image
 
+# sentence generator below
 def load_images_for_sentence(sentence, image_dir):
     images = []
+    collecting = False
+    collected_chars = ""
     for char in sentence:
+        # justify if it is like (christi)
+        if collecting:
+          if char == ')':
+            collecting = False
+            collected_chars += char
+            
+            image_path = os.path.join(image_dir, f"{collected_chars}.png")
+            try:
+              character_image = Image.open(image_path)
+              images.append((collected_chars, character_image))
+            except IOError:
+              
+              print(f"Image for {collected_chars} not found.")
+
+            collected_chars = ""
+          else:
+            collected_chars += char
+          continue
+
+        if char == '(':
+          collecting = True
+          collected_chars += char
+          continue
+        
         if char != ' ':
+          
+          # small letter
           if char in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'v', 'x', 'y', 'z', 'j', 'u', 'w']:
             image_path = os.path.join(image_dir, f"{char}_1.png")
             try:
               character_image = Image.open(image_path)
               images.append((char, character_image))
             except IOError:
-                # print(f"Image for {char} not found.")
-                pass
+              print(f"Image for {char} not found.")
+
+          # notation
+          elif char in ['.', ',', ';']:
+            image_path = os.path.join(image_dir, f"{char}_notation.png")
+            try:
+              character_image = Image.open(image_path)
+              images.append((char, character_image))
+            except IOError:
+              print(f"Image for {char} not found.")
+
+          # number
+          elif char in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            image_path = os.path.join(image_dir, f"{char}_number.png")
+            try:
+              character_image = Image.open(image_path)
+              images.append((char, character_image))
+            except IOError:
+              print(f"Image for {char} not found.")
+
+          # upper letter
           else:
             image_path = os.path.join(image_dir, f"{char}_c_1.png")
             try:
-                character_image = Image.open(image_path)
-                images.append((char, character_image))
+              character_image = Image.open(image_path)
+              images.append((char, character_image))
             except IOError:
-                # print(f"Image for {char} not found.")
-                pass
+              print(f"Image for {char} not found.")
+
         else:
           images.append((' ', None))
+
     return images
 
+# when consider the distance between each letter, we need to justify both in total width and letter pasting
 def calculate_size(loaded_images):
     total_width = 0
     max_height = 0
     letter_spaces = []
     word_spaces = []
-    for _, image in loaded_images:
+    for char, image in loaded_images:
         if image:
             letter_spacing = random.randint(2, 3)
-            total_width += image.size[0] + letter_spacing
+            right_offset = calculate_right_offset(char)
+            total_width += image.size[0] + right_offset + letter_spacing
             max_height = max(max_height, image.size[1])
             letter_spaces.append(letter_spacing)
         else:
@@ -59,6 +111,11 @@ def calculate_size(loaded_images):
     return total_width, max_height+34, letter_spaces, word_spaces
 
 def transform_image(image):
+
+    # make it blur
+    blur_radius = random.uniform(0.9, 1)
+    image = image.filter(ImageFilter.GaussianBlur(blur_radius))
+
     rotation_angle = random.uniform(-2, 2)
     rotated_image = image.rotate(rotation_angle, expand=True)
 
@@ -69,7 +126,7 @@ def transform_image(image):
     vertical_stretch_factor = random.uniform(0.98, 1.02)
     stretched_height = int(new_height * vertical_stretch_factor)
 
-    transformed_image = rotated_image.resize((new_width, stretched_height), Image.BICUBIC)
+    transformed_image = rotated_image.resize((new_width, stretched_height), Image.ANTIALIAS)
 
     return transformed_image
 
@@ -84,16 +141,21 @@ def create_final_image(loaded_images, total_width, max_height, letter_spaces, wo
     letter_space_index = 0
     word_space_index = 0
 
+    start_word = -1
+    end_word = -2
+
     for char, image in loaded_images:
         letter_position.append(current_width)
+        print('char: ', char)
         if image:
             image = transform_image(image)
-            offset = calculate_offset(char)
+            bottom_offset = calculate_bottom_offset(char)
+            right_offset = calculate_right_offset(char)
             ink_char  = generate_ink_char(image)
             ink_chars.append(ink_char)
-            final_image.paste(image, (current_width, max_height - image.size[1] + offset))
-            current_width += image.size[0] + letter_spaces[letter_space_index]
-            word_length += image.size[0] + letter_spaces[letter_space_index]
+            final_image.paste(image, (current_width, max_height - image.size[1] + bottom_offset))
+            current_width += image.size[0] + right_offset + letter_spaces[letter_space_index]
+            word_length += image.size[0] + right_offset + letter_spaces[letter_space_index]
             letter_space_index += 1
         else:
             start_word = current_width - word_length
@@ -107,11 +169,17 @@ def create_final_image(loaded_images, total_width, max_height, letter_spaces, wo
         word_coordinates.pop()
     return final_image, letter_position, word_coordinates, ink_chars, up_chars
 
-def calculate_offset(char):
-    offsets = {'f': -19, 'g': 0, 'p': -14, 'q': -14, 'j': -3, 'F': -13,
-               'G': -23, 'H': -31, 'J': -6, 'P': -20, 'Q': -22, 'R': -22,
-               'T': -31, 'Y': 0, 'Z': -30}
-    return offsets.get(char, -34)
+def calculate_bottom_offset(char):
+    bottom_offsets = {'f': -19, 'g': 0, 'p': -14, 'q': -14, 'j': -3, 'F': -13,
+                      'G': -23, 'H': -31, 'J': -6, 'P': -20, 'Q': -22, 'R': -22,
+                      'T': -31, 'Y': 0, 'Z': -30, 
+                      '(christi)': -24, '(prae)': -16, '(que)': -14, '(em)': -34, '(am)': -34, '(et)': -34,}
+    return bottom_offsets.get(char, -34)
+
+def calculate_right_offset(char):
+    right_offsets = {'f': -20}
+    # , 'g': 0, 'p': -14, 'q': -14, 'j': -3, 'F': -13,' G': -23, 'H': -31, 'J': -6, 'P': -20, 'Q': -22, 'R': -22, 'T': -31, 'Y': 0, 'Z': -30
+    return right_offsets.get(char, 0)
 
 def make_black_transparent(image, shift_white_letter):
 
@@ -125,7 +193,7 @@ def make_black_transparent(image, shift_white_letter):
 
     if shift_white_letter:
       # Invert bright pixels (RGB > 200)
-      bright_mask = (red > 200) & (green > 200) & (blue > 200)
+      bright_mask = (red > 100) & (green > 100) & (blue > 100)
       data[:,:,0][bright_mask] = 255 - data[:,:,0][bright_mask]
       data[:,:,1][bright_mask] = 255 - data[:,:,1][bright_mask]
       data[:,:,2][bright_mask] = 255 - data[:,:,2][bright_mask]
@@ -134,13 +202,14 @@ def make_black_transparent(image, shift_white_letter):
 
     return new_img
 
-# demo
-image_dir = '.Task3/Dictionary/'
+# How to use it:
+
+# image_dir = '.Task3/Dictionary/'
 
 # # Put your latin sentence here:
 # sentence = "nomenq genusql"
 # # Hope our work will help more people.
-# sentence = "Spes Laboris Nostri Plus Potest Adiuvare Homines YYYYY."
+# sentence = "(christi); (prae),  (et). fafefsft. Spes Laboris Nostri Plus Potest Adiuvare Homines YYYYY."
 
 # loaded_images = load_images_for_sentence(sentence, image_dir)
 # total_width, max_height, letter_spaces, word_spaces = calculate_size(loaded_images)
