@@ -1,12 +1,41 @@
-from PIL import Image
+from PIL import Image, ImageFilter
 import os
 import random
 import numpy as np
 
+# sentence generator below
 def load_images_for_sentence(sentence, image_dir):
     images = []
+    collecting = False
+    collected_chars = ""
     for char in sentence:
+        # justify if it is like (christi)
+        if collecting:
+          if char == ')':
+            collecting = False
+            collected_chars += char
+            
+            image_path = os.path.join(image_dir, f"{collected_chars}.png")
+            try:
+              character_image = Image.open(image_path)
+              images.append((collected_chars, character_image))
+            except IOError:
+              
+              print(f"Image for {collected_chars} not found.")
+
+            collected_chars = ""
+          else:
+            collected_chars += char
+          continue
+
+        if char == '(':
+          collecting = True
+          collected_chars += char
+          continue
+        
         if char != ' ':
+          
+          # small letter
           if char in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'v', 'x', 'y', 'z', 'j', 'u', 'w']:
             image_path = os.path.join(image_dir, f"{char}_1.png")
             try:
@@ -14,6 +43,26 @@ def load_images_for_sentence(sentence, image_dir):
               images.append((char, character_image))
             except IOError:
               print(f"Image for {char} not found.")
+
+          # notation
+          elif char in ['.', ',', ';']:
+            image_path = os.path.join(image_dir, f"{char}_notation.png")
+            try:
+              character_image = Image.open(image_path)
+              images.append((char, character_image))
+            except IOError:
+              print(f"Image for {char} not found.")
+
+          # number
+          elif char in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            image_path = os.path.join(image_dir, f"{char}_number.png")
+            try:
+              character_image = Image.open(image_path)
+              images.append((char, character_image))
+            except IOError:
+              print(f"Image for {char} not found.")
+
+          # upper letter
           else:
             image_path = os.path.join(image_dir, f"{char}_c_1.png")
             try:
@@ -21,19 +70,23 @@ def load_images_for_sentence(sentence, image_dir):
               images.append((char, character_image))
             except IOError:
               print(f"Image for {char} not found.")
+
         else:
           images.append((' ', None))
+
     return images
 
+# when consider the distance between each letter, we need to justify both in total width and letter pasting
 def calculate_size(loaded_images):
     total_width = 0
     max_height = 0
     letter_spaces = []
     word_spaces = []
-    for _, image in loaded_images:
+    for char, image in loaded_images:
         if image:
             letter_spacing = random.randint(2, 3)
-            total_width += image.size[0] + letter_spacing
+            right_offset = calculate_right_offset(char)
+            total_width += image.size[0] + right_offset + letter_spacing
             max_height = max(max_height, image.size[1])
             letter_spaces.append(letter_spacing)
         else:
@@ -41,9 +94,14 @@ def calculate_size(loaded_images):
             total_width += word_spacing
             word_spaces.append(word_spacing)
 
-    return total_width, max_height+34+14, letter_spaces, word_spaces
+    return total_width, max_height+34, letter_spaces, word_spaces
 
 def transform_image(image):
+
+    # make it blur
+    blur_radius = random.uniform(0.9, 1)
+    image = image.filter(ImageFilter.GaussianBlur(blur_radius))
+
     rotation_angle = random.uniform(-2, 2)
     rotated_image = image.rotate(rotation_angle, expand=True)
 
@@ -54,68 +112,39 @@ def transform_image(image):
     vertical_stretch_factor = random.uniform(0.98, 1.02)
     stretched_height = int(new_height * vertical_stretch_factor)
 
-    transformed_image = rotated_image.resize((new_width, stretched_height), Image.ANTIALIAS)
+    transformed_image = rotated_image.resize((new_width, stretched_height), Image.BICUBIC)
 
     return transformed_image
 
-def create_final_image(loaded_images, total_width, max_height, letter_spaces, word_spaces):
-    final_image = Image.new('RGB', (total_width, max_height), (0, 0, 0))
-    current_width = 0
-    letter_position = []
-    letter_space_index = 0
-    word_space_index = 0
-    for char, image in loaded_images:
-        letter_position.append(current_width)
-        if image:
-            image = transform_image(image)
-            if char == 'f':
-              offset = -19
-            elif char == 'g':
-              offset = 0
-            elif char in ['p', 'q']:
-              offset = -14
-            elif char == 'j':
-              offset = -3
-            elif char == 'F':
-              offset = -13
-            elif char == 'G':
-              offset = -23
-            elif char == 'H':
-              offset = -31
-            elif char == 'J':
-              offset = -6
-            elif char == 'P':
-              offset = -20
-            elif char == 'Q':
-              offset = -22
-            elif char == 'R':
-              offset = -22
-            elif char == 'T':
-              offset = -31
-            elif char == 'Y':
-              offset = 0
-            elif char == 'Z':
-              offset = -30
-            else:
-              offset = -34
-            final_image.paste(image, (current_width, max_height - image.size[1] + offset))
-            current_width += image.size[0] + letter_spaces[letter_space_index]
-            letter_space_index += 1
-        else:
-            current_width += word_spaces[word_space_index]
-            word_space_index += 1
-    return final_image, letter_position
+def calculate_bottom_offset(char):
+    bottom_offsets = {'f': -19, 'g': 0, 'p': -14, 'q': -14, 'j': -3, 'F': -13,
+                      'G': -23, 'H': -31, 'J': -6, 'P': -20, 'Q': -22, 'R': -22,
+                      'T': -31, 'Y': 0, 'Z': -30, 
+                      '(christi)': -24, '(prae)': -16, '(que)': -14, '(em)': -34, '(am)': -34, '(et)': -34,}
+    return bottom_offsets.get(char, -34)
 
-# demo:
-# image_dir = './Dictionary'
+def calculate_right_offset(char):
+    right_offsets = {'f': -20}
+    # , 'g': 0, 'p': -14, 'q': -14, 'j': -3, 'F': -13,' G': -23, 'H': -31, 'J': -6, 'P': -20, 'Q': -22, 'R': -22, 'T': -31, 'Y': 0, 'Z': -30
+    return right_offsets.get(char, 0)
 
-# # Put your latin sentence here:
-# # Hope our work will help more people.
-# sentence = "Spes Laboris Nostri Plus Potest Adiuvare Homines YYYYY."
+def make_black_transparent(image, shift_white_letter):
 
-# loaded_images = load_images_for_sentence(sentence, image_dir)
-# total_width, max_height, letter_spaces, word_spaces = calculate_size(loaded_images)
-# final_image, letter_position = create_final_image(loaded_images, total_width, max_height, letter_spaces, word_spaces)
-# final_image_path = os.path.join(image_dir, "final_sentence_image.png")
-# final_image.save(final_image_path)
-# print("Image created and saved to", final_image_path)
+    img = image
+    img = img.convert("RGBA")
+    data = np.array(img)
+
+    red, green, blue, alpha = data[:,:,0], data[:,:,1], data[:,:,2], data[:,:,3]
+    dark_mask = (red < 100) & (green < 100) & (blue < 100)
+    data[:,:,:4][dark_mask] = [0, 0, 0, 0]
+
+    if shift_white_letter:
+      # Invert bright pixels (RGB > 200)
+      bright_mask = (red > 100) & (green > 100) & (blue > 100)
+      data[:,:,0][bright_mask] = 255 - data[:,:,0][bright_mask]
+      data[:,:,1][bright_mask] = 255 - data[:,:,1][bright_mask]
+      data[:,:,2][bright_mask] = 255 - data[:,:,2][bright_mask]
+
+    new_img = Image.fromarray(data)
+
+    return new_img
