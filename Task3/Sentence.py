@@ -146,7 +146,7 @@ def create_final_image(loaded_images, total_width, max_height, letter_spaces, wo
 
     for char, image in loaded_images:
         letter_position.append(current_width)
-        # print('char: ', char)
+        print('char: ', char)
         if image:
             image = transform_image(image)
             bottom_offset = calculate_bottom_offset(char)
