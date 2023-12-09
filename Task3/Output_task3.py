@@ -104,8 +104,7 @@ def text_lines(font, font_size, text_position, text, max_line_width, image_dir):
         # Append the ink line to the list of all lines ink images
         ink_images.append(ink_texture_image)
         
-        tsv_line.append(line)
-        tsv_line.append(word_coordinates)
+        tsv_line.append((line, word_coordinates))
     # (flavien) Made the method return the coordinated in case I need them
     return images, all_coordinates, ink_images, baseline_position, tsv_line
 
@@ -117,7 +116,7 @@ def generate_text(fake_txt=False):
             latin_text = fake.text(max_nb_chars=1000)  # Adjust the number as needed
         else:
             with open("./Task3/latin.txt") as latin:
-                latin_text = latin.read(2000)
+                latin_text = latin.read()
 
         return latin_text
 
@@ -133,7 +132,7 @@ def reproduce_text(font_size, text_position, max_line_width, image_dir):
     # Draw text on a separate image
     list_images, list_coord, blended_ink_images, baseline, tsv_line = text_lines(font, font_size, text_position, text, max_line_width, image_dir)
 
-    return list_images, blended_ink_images, list_coord, baseline
+    return list_images, blended_ink_images, list_coord, baseline, tsv_line
 
 # Example usage
 if __name__ == "__main__":
