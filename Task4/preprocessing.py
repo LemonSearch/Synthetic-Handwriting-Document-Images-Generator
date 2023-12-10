@@ -78,6 +78,8 @@ def detect_cols(name, img, show=False):
     if show:
         bounds = Image.fromarray(img2)
         bounds.show()
+        clo = Image.fromarray(closing)
+        clo.show()
     cols.sort(key= lambda x: x[0])
     return cols
     
@@ -110,6 +112,8 @@ def detect_lines(col_img, show=False):
     if show:
         bounds = Image.fromarray(img2)
         bounds.show()
+        clo = Image.fromarray(closing)
+        clo.show()
 
     return baselines
 
@@ -136,7 +140,7 @@ if __name__ == "__main__":
         page_cols = detect_cols(file, img)
         c = 0
         for col in page_cols:
-            col_lines = detect_lines(img[col[1]:(col[1]+col[3]), col[0]:(col[0]+col[2])])
+            col_lines = detect_lines(img[col[1]:(col[1]+col[3]), col[0]:(col[0]+col[2])], True)
             col_lines.sort()
             lines.append(col_lines)
             if c == 0:
@@ -225,4 +229,4 @@ if __name__ == "__main__":
             }
         }
         yaml.dump(data_doc, writer)
-        # print(dist)
+        print(dist)

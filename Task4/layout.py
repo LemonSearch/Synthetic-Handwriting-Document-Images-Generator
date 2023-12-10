@@ -37,6 +37,10 @@ def generate_layout(input_bg, config: dict, page_id):
     text_list = [text[i] for i in idx]
     ink_list = [ink[i] for i in idx]
     tsv_lines = [tsv_line[i] for i in idx]
+    a = random.choice(text_list)
+    b = random.choice(ink_list)
+    a.show()
+    b.show()
     # Adjust the baseline to work appropriately
     baseline += 42
     # Counter to keep tracks of the lines

@@ -20,8 +20,8 @@ def load_images_for_sentence(sentence, image_dir):
               character_image = Image.open(image_path)
               images.append((collected_chars, character_image))
             except IOError:
-              
-              print(f"Image for {collected_chars} not found.")
+              pass
+              #print(f"Image for {collected_chars} not found.")
 
             collected_chars = ""
           else:
@@ -42,7 +42,8 @@ def load_images_for_sentence(sentence, image_dir):
               character_image = Image.open(image_path)
               images.append((char, character_image))
             except IOError:
-              print(f"Image for {char} not found.")
+              pass
+              #print(f"Image for {char} not found.")
 
           # notation
           elif char in ['.', ',', ';']:
@@ -51,7 +52,8 @@ def load_images_for_sentence(sentence, image_dir):
               character_image = Image.open(image_path)
               images.append((char, character_image))
             except IOError:
-              print(f"Image for {char} not found.")
+              pass
+              #print(f"Image for {char} not found.")
 
           # number
           elif char in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
@@ -60,7 +62,8 @@ def load_images_for_sentence(sentence, image_dir):
               character_image = Image.open(image_path)
               images.append((char, character_image))
             except IOError:
-              print(f"Image for {char} not found.")
+              pass
+              #print(f"Image for {char} not found.")
 
           # upper letter
           else:
@@ -69,7 +72,8 @@ def load_images_for_sentence(sentence, image_dir):
               character_image = Image.open(image_path)
               images.append((char, character_image))
             except IOError:
-              print(f"Image for {char} not found.")
+              pass
+              #print(f"Image for {char} not found.")
 
         else:
           images.append((' ', None))
