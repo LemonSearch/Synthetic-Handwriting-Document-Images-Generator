@@ -27,20 +27,16 @@ def generate_layout(input_bg, config: dict, page_id):
     lines_spacing = get_random_value(
                         avg=config[orient]["avg_line_d"], 
                         std=config[orient]["line_d_std"],
-                        type=1
+                        type=2
                     )
     # Get the lines text, ink texture, coordinates and baseline from Task 3 
     text, ink, coords, baseline, tsv_line= TextGen.reproduce_text(font_size=8, text_position=(0,0),\
-                                                         max_line_width=830, image_dir="./Task3/Dictionary/")
+                                                         max_line_width=780, image_dir="./Task3/Dictionary/")
     # Select a random sampling of sentences for more randomness
     idx = random.sample(range(len(text)), 52)
     text_list = [text[i] for i in idx]
     ink_list = [ink[i] for i in idx]
     tsv_lines = [tsv_line[i] for i in idx]
-    a = random.choice(text_list)
-    b = random.choice(ink_list)
-    a.show()
-    b.show()
     # Adjust the baseline to work appropriately
     baseline += 42
     # Counter to keep tracks of the lines
@@ -51,12 +47,12 @@ def generate_layout(input_bg, config: dict, page_id):
         curr_x = get_random_value(
                     avg=config[orient][f"col{col}"][0],
                     std=config[orient][f"col{col}_std"][0],
-                    type=0
+                    type=col
                 )
         if col == 1:
             curr_x -= 20
         else:
-            curr_x += 20
+            curr_x += 30
         # Get the first line distance relative to the column location
         line_y = get_random_value(
                     avg=config[orient][f"line{col}"],
@@ -68,14 +64,14 @@ def generate_layout(input_bg, config: dict, page_id):
         curr_y = get_random_value(
                     avg=(config[orient]["col1"][1]+config[orient]["col2"][1])/2,
                     std=(config[orient]["col1_std"][1]+config[orient]["col2_std"][1])/2,
-                    type=0
+                    type=col
                 ) + line_y
 
         line_text = text_list[nb_line]
         line_ink = ink_list[nb_line]
         line_coord = coords[nb_line]
         line_data = tsv_lines[nb_line]
-        txt = line_data[0].translate(str.maketrans("","", string.punctuation)).split()
+        txt = line_data[0].split()
         word_pos = ",".join([f"{a}-{b}" for (a, b) in line_data[1]])
         mask.paste(line_text, (curr_x, curr_y-baseline))
         texture.paste(line_ink, (curr_x, curr_y-baseline))
@@ -90,7 +86,7 @@ def generate_layout(input_bg, config: dict, page_id):
             line_ink = ink_list[nb_line]
             line_coord = coords[nb_line]
             line_data =tsv_lines[nb_line]
-            txt = line_data[0].translate(str.maketrans("","", string.punctuation)).lower().split()
+            txt = line_data[0].lower().split()
             word_pos = ",".join([f"{a}-{b}" for (a, b) in line_data[1]])
             mask.paste(line_text, (curr_x, curr_y-baseline))
             texture.paste(line_ink, (curr_x, curr_y-baseline))
@@ -119,6 +115,8 @@ def get_random_value(avg, std, type):
     """
     if type == 0:
         return round(random.uniform(avg-std, avg+std))
+    elif type == 1:
+        return round(random.uniform(avg-std, avg))
     else:
         return round(random.uniform(avg, avg+std))
 

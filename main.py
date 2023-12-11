@@ -1,13 +1,11 @@
 import re
-from PIL import Image
-import cv2
 import os
-import random
 import numpy as np
 import Task1.main_task1 as BGGen
 import Task4.layout as LayoutGen
 import argparse
 from Task4.preprocessing import detect_page
+import time
 
 IN = "./in/"
 OUT = "./out/"
@@ -30,16 +28,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    # files = os.listdir(IN)
-    # if args.gen_bg or len(files) == 0:
-    #     cv2_bg = BGGen.generate_background()
-    #     sample = 1
-    #     for i in cv2_bg:
-    #         pil_bg = Image.fromarray(cv2.cvtColor(i, cv2.COLOR_BGR2RGB))
-    #         pil_bg.save(f"{IN}sample{sample}.png")
-    #         sample+=1
-    #
-    # files = os.listdir(IN)
     config = LayoutGen.get_config()
 
     id = 300
@@ -47,12 +35,15 @@ if __name__ == "__main__":
         for file in os.listdir(OUT):
             os.remove(OUT+file)
     else:
-        id = max(re.findall(r"\d+", "-".join(map(str, os.listdir(OUT)))))
+        id = int(max(re.findall(r"\d+", "-".join(map(str, os.listdir(OUT))))))
 
+    runtimes = list()
     for _ in range(args.nb):
+        start = time.perf_counter()
         bg = BGGen.generate_background()
-        # bg = random.choice(files)
-        # bg = Image.open(IN+bg)
+        os.remove("./crop_image.png")
+        os.remove("./image_with_contours.png")
+        os.remove("./thresh_image.jpg")
         orient, _ = detect_page(np.array(bg))
         if orient == 0:
             if id%2 == 0:
@@ -65,4 +56,9 @@ if __name__ == "__main__":
         img = LayoutGen.generate_layout(bg, config, page_id=page_id)
         img.save(OUT+page_id+".png")
         id += 1
+        end = time.perf_counter()
+        runtime = end-start
+        runtimes.append(runtime)
+
+    print(f"Average Runtime: {sum(runtimes)/len(runtimes)}")
 
