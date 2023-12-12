@@ -16,11 +16,6 @@ parser.add_argument(
     help="Define the number of synthetic pages to generate"
 )
 parser.add_argument(
-    "--gen_bg", type=int, default=0,
-    help="Generate new background. 0=False, will use present background images\
-            1=True, will regenerate new background"
-)
-parser.add_argument(
     "--overwrite", type=int, default=1,
     help="Default is 1. If set to 0 any new files will be added to the output instead of overwritting them, including the TSV file"
 )
