@@ -86,13 +86,19 @@ def calculate_size(loaded_images):
     max_height = 0
     letter_spaces = []
     word_spaces = []
+    max_width = 1150
+
     for char, image in loaded_images:
         if image:
-            letter_spacing = random.randint(2, 3)
-            right_offset = calculate_right_offset(char)
-            total_width += image.size[0] + right_offset + letter_spacing
             max_height = max(max_height, image.size[1])
+            letter_spacing = random.randint(2, 3)
             letter_spaces.append(letter_spacing)
+            right_offset = calculate_right_offset(char)
+            # you can judge here, if current width exceed max width, then break
+            total_width += image.size[0] + right_offset + letter_spacing
+            if total_width > max_width:
+              total_width -= (image.size[0] + right_offset + letter_spacing)
+              break
         else:
             word_spacing= random.randint(30, 50)
             total_width += word_spacing
