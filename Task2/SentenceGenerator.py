@@ -98,7 +98,7 @@ def calculate_size(loaded_images):
             total_width += image.size[0] + right_offset + letter_spacing
             if total_width > max_width:
               total_width -= (image.size[0] + right_offset + letter_spacing)
-              break
+              continue
         else:
             word_spacing= random.randint(30, 50)
             total_width += word_spacing

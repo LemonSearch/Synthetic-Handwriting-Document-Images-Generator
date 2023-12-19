@@ -69,7 +69,7 @@ def text_lines(font, font_size, text_position, text, max_line_width, image_dir):
         #print(line)
         loaded_images = load_images_for_sentence(line, image_dir)
         total_width, max_height, letter_spaces, word_spaces = calculate_size(loaded_images)
-        final_image, letter_positions, word_coordinates, ink_chars, up_chars = create_final_image(loaded_images, total_width, max_height+40, letter_spaces, word_spaces)
+        final_image, letter_positions, word_coordinates, ink_chars, up_chars = create_final_image(loaded_images, total_width, max_height, letter_spaces, word_spaces)
         #final_image.show()
         ink_texture_image = reproduce_ink(final_image, ink_chars, letter_positions, max_height, up_chars)
         left, upper, right, lower = final_image.getbbox()

@@ -21,6 +21,7 @@ def generate_layout(input_bg, config: dict, page_id):
     mask = Image.new("L", size, 0)
     # Create an image in which to store the texture for each text lines
     texture = Image.new("RGB", size, (255, 255, 255))
+    img = ImageDraw.Draw((input_bg))
     # Set the background to be drawn onto
     # bg = ImageDraw.Draw(input_bg)
     
@@ -38,7 +39,7 @@ def generate_layout(input_bg, config: dict, page_id):
     ink_list = [ink[i] for i in idx]
     tsv_lines = [tsv_line[i] for i in idx]
     # Adjust the baseline to work appropriately
-    baseline += 42
+    baseline += 10
     # Counter to keep tracks of the lines
     nb_line = 0
     # Generate the lines for each columns
@@ -69,13 +70,14 @@ def generate_layout(input_bg, config: dict, page_id):
 
         line_text = text_list[nb_line]
         line_ink = ink_list[nb_line]
-        line_coord = coords[nb_line]
+        line_coord = line_text.getbbox()
         line_data = tsv_lines[nb_line]
         txt = line_data[0].split()
         word_pos = ",".join([f"{a}-{b}" for (a, b) in line_data[1]])
         mask.paste(line_text, (curr_x, curr_y-baseline))
         texture.paste(line_ink, (curr_x, curr_y-baseline))
         line_pos = (curr_x, curr_y-baseline, curr_x+line_coord[2], curr_y-baseline+line_coord[3])
+        # img.line([(curr_x, curr_y), (curr_x+round(config[orient][f"col{col}"][2]), curr_y)], fill="yellow", width=5)
         write_tsv(page_id, COLUMNS[col-1], format_int(nb_line), line_pos, curr_y, txt, word_pos)
         nb_line +=1 
         for line in range(1, 26):
@@ -84,13 +86,14 @@ def generate_layout(input_bg, config: dict, page_id):
             curr_y = int(curr_y+lines_spacing)
             line_text = text_list[nb_line]
             line_ink = ink_list[nb_line]
-            line_coord = coords[nb_line]
+            line_coord = line_text.getbbox()
             line_data =tsv_lines[nb_line]
             txt = line_data[0].lower().split()
             word_pos = ",".join([f"{a}-{b}" for (a, b) in line_data[1]])
             mask.paste(line_text, (curr_x, curr_y-baseline))
             texture.paste(line_ink, (curr_x, curr_y-baseline))
             line_pos = (curr_x, curr_y-baseline, curr_x+line_coord[2], curr_y-baseline+line_coord[3])
+            # img.rectangle(line_pos, fill="yellow", width=5)
             write_tsv(page_id, COLUMNS[col-1], format_int(nb_line), line_pos, curr_y, txt, word_pos)
             nb_line+=1
     final = Image.composite(input_bg, texture, mask=ImageOps.invert(mask))
